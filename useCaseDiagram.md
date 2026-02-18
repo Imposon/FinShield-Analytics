@@ -3,32 +3,15 @@
 ```mermaid
 flowchart LR
 
-%% =======================
-%% ACTORS (LEFT SIDE)
-%% =======================
+%% ACTORS
+Admin((Admin))
+Analyst((Risk Analyst))
+Auditor((Auditor))
+Customer((Customer))
 
-Customer[[Customer]]
-Admin[[Admin]]
-Analyst[[Risk Analyst]]
-Auditor[[Auditor]]
-Bank[[Bank Core System]]
-AI[[AI Service]]
+%% USE CASES (RIGHT SIDE)
 
-%% =======================
-%% SYSTEM BOUNDARY
-%% =======================
-
-subgraph FinShield_Analytics_System
-
-direction TB
-
-AuthBox[Authentication Module]
-TransactionBox[Transaction Processing Module]
-AlertBox[Alert Management Module]
-ReportBox[Reporting & Monitoring Module]
-
-Login[Login]
-ManageUsers[Manage Users]
+Login[Register / Login]
 
 ProcessTransaction[Process Transaction]
 CalculateRisk[Calculate Risk Score]
@@ -40,36 +23,13 @@ UpdateStatus[Update Alert Status]
 ViewDashboard[View Dashboard]
 ViewReports[View Reports]
 ViewAuditLogs[View Audit Logs]
+
+ManageUsers[Manage Users]
 RetrainModel[Retrain AI Model]
 
-%% Module Structure
-AuthBox --> Login
-AuthBox --> ManageUsers
-
-TransactionBox --> ProcessTransaction
-TransactionBox --> CalculateRisk
-TransactionBox --> GenerateAlert
-
-AlertBox --> AssignAlert
-AlertBox --> UpdateStatus
-
-ReportBox --> ViewDashboard
-ReportBox --> ViewReports
-ReportBox --> ViewAuditLogs
-ReportBox --> RetrainModel
-
-end
-
-%% =======================
 %% CONNECTIONS
-%% =======================
 
 Customer --> ProcessTransaction
-Bank --> ProcessTransaction
-AI --> CalculateRisk
-
-ProcessTransaction --> CalculateRisk
-CalculateRisk --> GenerateAlert
 
 Admin --> Login
 Admin --> ManageUsers
@@ -81,6 +41,11 @@ Analyst --> Login
 Analyst --> AssignAlert
 Analyst --> UpdateStatus
 Analyst --> ViewDashboard
+Analyst --> ViewReports
 
 Auditor --> ViewReports
 Auditor --> ViewAuditLogs
+
+%% SYSTEM FLOW
+ProcessTransaction --> CalculateRisk
+CalculateRisk --> GenerateAlert
