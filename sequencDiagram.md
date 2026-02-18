@@ -7,8 +7,8 @@
 # Sequence Diagram – Fraud Detection Flow
 
 ```mermaid
-
 sequenceDiagram
+
     participant User
     participant Frontend
     participant TransactionController
