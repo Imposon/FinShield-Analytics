@@ -1,45 +1,82 @@
 # FinShield Analytics
 
-## Overview
-FinShield Analytics is a full-stack AI-powered financial risk monitoring and fraud detection platform. 
-It helps banks and fintech companies detect suspicious transactions in real-time using machine learning models and rule-based risk scoring.
+## Project Overview
+
+FinShield Analytics is a Full Stack AI-powered financial fraud detection and risk monitoring system designed for banks and fintech platforms.
+
+The system analyzes transactions in real time using a combination of:
+- Rule-based fraud detection
+- AI-based anomaly scoring
+- Risk threshold evaluation
+- Alert management system
+
+The main focus of this project is backend architecture, clean OOP design, and scalable system structure.
+
+---
 
 ## Problem Statement
-Financial institutions face increasing fraud attempts and risky transactions. 
-Traditional rule-based systems are not adaptive and fail to detect evolving fraud patterns.
 
-## Solution
-FinShield Analytics combines:
-- Rule-based fraud detection
-- AI-based anomaly detection
-- Risk scoring engine
-- Real-time alerts dashboard
+Financial institutions process thousands of transactions daily. Detecting fraudulent or high-risk transactions manually or through static rule-based systems is inefficient and outdated.
+
+We need a scalable backend system that:
+- Analyzes transactions
+- Assigns risk scores
+- Generates alerts
+- Allows analysts to manage suspicious cases
+
+---
+
+## Proposed Solution
+
+FinShield Analytics provides:
+
+- Real-time transaction monitoring
+- Fraud scoring engine (Rule-based + AI strategy)
+- Alert generation for suspicious transactions
+- Role-based access (Admin, Risk Analyst, Auditor)
+- Dashboard for monitoring risk trends
+
+---
 
 ## Key Features
 
-### User Management
-- Admin, Risk Analyst, Auditor roles
-- Secure authentication & authorization (JWT-based)
+### 1. Authentication & Role Management
+- Secure login
+- Role-based authorization
+- Admin user management
 
-### Transaction Monitoring
-- Real-time transaction ingestion
-- Fraud detection using AI model
-- Risk scoring engine
+### 2. Transaction Processing
+- Create and store transactions
+- Analyze transaction risk
+- Mark status (SAFE / SUSPICIOUS)
 
-### Alert System
-- Auto-generate alerts for suspicious transactions
-- Assign alerts to analysts
-- Status tracking (Open, Investigating, Closed)
+### 3. Fraud Detection Engine
+- Strategy Pattern for fraud scoring
+- AI scoring simulation
+- Rule-based threshold scoring
 
-### AI Module
-- ML model for anomaly detection
-- Confidence score for each transaction
-- Model retraining capability
+### 4. Alert Management
+- Auto-create alerts
+- Assign to analysts
+- Track status (Open / Investigating / Closed)
 
-### Dashboard
-- Fraud trends visualization
-- Risk heatmap
-- Analyst performance metrics
+### 5. Reporting Module
+- Fraud statistics
+- Risk score trends
+- Analyst performance tracking
+
+---
+
+## Backend Design Principles
+
+- OOP principles (Encapsulation, Abstraction, Inheritance, Polymorphism)
+- Controller → Service → Repository architecture
+- Strategy Pattern (Fraud scoring)
+- Singleton Pattern (Logger)
+- Clean modular folder structure
+- RESTful API design
+
+---
 
 ## Tech Stack
 
@@ -47,13 +84,9 @@ Backend:
 - Node.js / Spring Boot
 - REST APIs
 - PostgreSQL / MySQL
-- Redis (optional for caching)
 
 Frontend:
-- React.js dashboard
+- React Dashboard
 
-AI:
-- Python ML microservice (Scikit-learn / TensorFlow)
-
-## Scope
-This system focuses on backend architecture, clean OOP structure, scalable design, and modular services.
+AI Module:
+- Python microservice (simulated scoring)
