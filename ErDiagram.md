@@ -9,8 +9,6 @@ This clearly shows:
 
 # 📄 4️⃣ ErDiagram.md (Mermaid)
 
-```md
-# ER Diagram – FinShield Analytics
 
 ```mermaid
 erDiagram
@@ -50,3 +48,4 @@ AUDIT_LOGS {
 USERS ||--o{ ALERTS : assigned_to
 TRANSACTIONS ||--|| ALERTS : generates
 USERS ||--o{ AUDIT_LOGS : creates
+```
