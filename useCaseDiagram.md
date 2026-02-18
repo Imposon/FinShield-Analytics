@@ -3,71 +3,84 @@
 ```mermaid
 flowchart LR
 
-%% ======================
-%% ACTORS (Left Side)
-%% ======================
+%% =======================
+%% ACTORS (LEFT SIDE)
+%% =======================
 
-Customer([Customer])
-Admin([Admin])
-Analyst([Risk Analyst])
-Auditor([Auditor])
-BankAPI([Bank Core System])
-AIService([AI Service])
+Customer[[Customer]]
+Admin[[Admin]]
+Analyst[[Risk Analyst]]
+Auditor[[Auditor]]
+Bank[[Bank Core System]]
+AI[[AI Service]]
 
-%% ======================
+%% =======================
 %% SYSTEM BOUNDARY
-%% ======================
+%% =======================
 
 subgraph FinShield_Analytics_System
 
-%% Authentication
-Login(Login)
-ManageUsers(Manage Users)
+direction TB
 
-%% Transaction Processing
-ProcessTransaction(Process Transaction)
-CalculateRisk(Calculate Risk Score)
-GenerateAlert(Generate Alert)
+AuthBox[Authentication Module]
+TransactionBox[Transaction Processing Module]
+AlertBox[Alert Management Module]
+ReportBox[Reporting & Monitoring Module]
 
-%% Alert Management
-AssignAlert(Assign Alert)
-UpdateStatus(Update Alert Status)
+Login[Login]
+ManageUsers[Manage Users]
 
-%% Monitoring & Reporting
-ViewDashboard(View Dashboard)
-ViewReports(View Reports)
-ViewAuditLogs(View Audit Logs)
-RetrainModel(Retrain AI Model)
+ProcessTransaction[Process Transaction]
+CalculateRisk[Calculate Risk Score]
+GenerateAlert[Generate Alert]
+
+AssignAlert[Assign Alert]
+UpdateStatus[Update Alert Status]
+
+ViewDashboard[View Dashboard]
+ViewReports[View Reports]
+ViewAuditLogs[View Audit Logs]
+RetrainModel[Retrain AI Model]
+
+%% Module Structure
+AuthBox --> Login
+AuthBox --> ManageUsers
+
+TransactionBox --> ProcessTransaction
+TransactionBox --> CalculateRisk
+TransactionBox --> GenerateAlert
+
+AlertBox --> AssignAlert
+AlertBox --> UpdateStatus
+
+ReportBox --> ViewDashboard
+ReportBox --> ViewReports
+ReportBox --> ViewAuditLogs
+ReportBox --> RetrainModel
 
 end
 
-%% ======================
-%% RELATIONSHIPS
-%% ======================
+%% =======================
+%% CONNECTIONS
+%% =======================
 
-%% Customer & Bank
 Customer --> ProcessTransaction
-BankAPI --> ProcessTransaction
+Bank --> ProcessTransaction
+AI --> CalculateRisk
 
-%% Core Fraud Flow
 ProcessTransaction --> CalculateRisk
-AIService --> CalculateRisk
 CalculateRisk --> GenerateAlert
 
-%% Admin Actions
 Admin --> Login
 Admin --> ManageUsers
 Admin --> ViewDashboard
 Admin --> ViewReports
 Admin --> RetrainModel
 
-%% Analyst Actions
 Analyst --> Login
-Analyst --> ViewDashboard
 Analyst --> AssignAlert
 Analyst --> UpdateStatus
-Analyst --> ViewReports
+Analyst --> ViewDashboard
 
-%% Auditor Actions
 Auditor --> ViewReports
 Auditor --> ViewAuditLogs
