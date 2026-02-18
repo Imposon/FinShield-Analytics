@@ -1,14 +1,9 @@
 
-This clearly shows:
-✔ Inheritance  
-✔ Interface  
-✔ Singleton  
-✔ Relationships  
-
 ---
 
-# 📄 4️⃣ ErDiagram.md (Mermaid)
+# 📄 ErDiagram.md
 
+# ER Diagram – FinShield Analytics
 
 ```mermaid
 erDiagram
@@ -45,7 +40,15 @@ AUDIT_LOGS {
     datetime timestamp
 }
 
-USERS ||--o{ ALERTS : assigned_to
+REPORTS {
+    int report_id PK
+    string report_type
+    datetime generated_at
+}
+
+USERS ||--o{ ALERTS : assigns
 TRANSACTIONS ||--|| ALERTS : generates
-USERS ||--o{ AUDIT_LOGS : creates
+USERS ||--o{ AUDIT_LOGS : performs
+TRANSACTIONS ||--o{ REPORTS : summarized_in
+
 ```

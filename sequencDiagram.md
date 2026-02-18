@@ -1,39 +1,50 @@
 
 ---
 
-# 📄 2️⃣ sequenceDiagram.md (Mermaid)
+# 📄 sequenceDiagram.md
 
-
-# Sequence Diagram – Fraud Detection Flow
+# Sequence Diagram – End-to-End Fraud Detection Flow
 
 ```mermaid
 sequenceDiagram
 
-    participant User
-    participant Frontend
-    participant TransactionController
-    participant TransactionService
-    participant FraudService
-    participant Database
-    participant AlertService
+participant Customer
+participant Frontend
+participant TransactionController
+participant TransactionService
+participant FraudService
+participant RuleEngine
+participant AIService
+participant AlertService
+participant NotificationService
+participant Database
+participant AuditLogger
 
-    User->>Frontend: Submit Transaction
-    Frontend->>TransactionController: POST /transaction
-    TransactionController->>TransactionService: validate & process
-    TransactionService->>FraudService: analyze(transaction)
+Customer->>Frontend: Initiate Transaction
+Frontend->>TransactionController: POST /transactions
+TransactionController->>TransactionService: validateAndProcess()
 
-    FraudService->>FraudService: RuleBasedStrategy
-    FraudService->>FraudService: AIStrategy
+TransactionService->>FraudService: analyzeTransaction()
 
-    FraudService-->>TransactionService: riskScore
-    TransactionService->>Database: Save Transaction
+FraudService->>RuleEngine: evaluateRules()
+RuleEngine-->>FraudService: ruleScore
 
-    alt Risk > Threshold
-        TransactionService->>AlertService: createAlert()
-        AlertService->>Database: Save Alert
-    end
+FraudService->>AIService: requestAIScore()
+AIService-->>FraudService: aiScore
 
-    TransactionService-->>TransactionController: Response
-    TransactionController-->>Frontend: Return Result
+FraudService-->>TransactionService: finalRiskScore
 
+TransactionService->>Database: Save Transaction
+
+alt Risk > Threshold
+    TransactionService->>AlertService: createAlert()
+    AlertService->>Database: Save Alert
+    AlertService->>NotificationService: notifyAnalyst()
+    NotificationService-->>Frontend: Push Alert
+end
+
+TransactionService->>AuditLogger: logTransaction()
+AuditLogger->>Database: Save Audit Log
+
+TransactionController-->>Frontend: Return Response
 ```
