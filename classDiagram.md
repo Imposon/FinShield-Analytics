@@ -3,8 +3,6 @@
 
 # 📄 3️⃣ classDiagram.md (Mermaid)
 
-```md
-# Class Diagram – FinShield Analytics
 
 ```mermaid
 classDiagram
@@ -71,3 +69,4 @@ RiskStrategy <|-- RuleBasedStrategy
 RiskStrategy <|-- AIBasedStrategy
 
 AlertService --> Alert
+```
