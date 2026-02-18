@@ -3,7 +3,7 @@
 
 # 📄 2️⃣ sequenceDiagram.md (Mermaid)
 
-```md
+
 # Sequence Diagram – Fraud Detection Flow
 
 ```mermaid
@@ -35,3 +35,5 @@ sequenceDiagram
 
     TransactionService-->>TransactionController: Response
     TransactionController-->>Frontend: Return Result
+
+```
