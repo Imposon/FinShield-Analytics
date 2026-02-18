@@ -3,57 +3,71 @@
 ```mermaid
 flowchart LR
 
-%% Actors
+%% ======================
+%% ACTORS (Left Side)
+%% ======================
+
+Customer([Customer])
 Admin([Admin])
 Analyst([Risk Analyst])
 Auditor([Auditor])
-Customer([Customer])
 BankAPI([Bank Core System])
-AIService([AI Model Service])
-Notification([Notification Service])
+AIService([AI Service])
 
-%% System Boundary
+%% ======================
+%% SYSTEM BOUNDARY
+%% ======================
+
 subgraph FinShield_Analytics_System
 
-UC1(Login)
-UC2(Manage Users)
-UC3(View Dashboard)
-UC4(Process Transaction)
-UC5(Calculate Risk Score)
-UC6(Generate Alert)
-UC7(Assign Alert)
-UC8(Update Alert Status)
-UC9(View Reports)
-UC10(View Audit Logs)
-UC11(Retrain AI Model)
-UC12(Send Notification)
+%% Authentication
+Login(Login)
+ManageUsers(Manage Users)
+
+%% Transaction Processing
+ProcessTransaction(Process Transaction)
+CalculateRisk(Calculate Risk Score)
+GenerateAlert(Generate Alert)
+
+%% Alert Management
+AssignAlert(Assign Alert)
+UpdateStatus(Update Alert Status)
+
+%% Monitoring & Reporting
+ViewDashboard(View Dashboard)
+ViewReports(View Reports)
+ViewAuditLogs(View Audit Logs)
+RetrainModel(Retrain AI Model)
 
 end
 
-%% Actor Relationships
-Admin --> UC1
-Admin --> UC2
-Admin --> UC3
-Admin --> UC9
-Admin --> UC11
+%% ======================
+%% RELATIONSHIPS
+%% ======================
 
-Analyst --> UC1
-Analyst --> UC3
-Analyst --> UC7
-Analyst --> UC8
-Analyst --> UC9
+%% Customer & Bank
+Customer --> ProcessTransaction
+BankAPI --> ProcessTransaction
 
-Auditor --> UC9
-Auditor --> UC10
+%% Core Fraud Flow
+ProcessTransaction --> CalculateRisk
+AIService --> CalculateRisk
+CalculateRisk --> GenerateAlert
 
-Customer --> UC4
+%% Admin Actions
+Admin --> Login
+Admin --> ManageUsers
+Admin --> ViewDashboard
+Admin --> ViewReports
+Admin --> RetrainModel
 
-BankAPI --> UC4
-UC4 --> UC5
-AIService --> UC5
+%% Analyst Actions
+Analyst --> Login
+Analyst --> ViewDashboard
+Analyst --> AssignAlert
+Analyst --> UpdateStatus
+Analyst --> ViewReports
 
-UC5 --> UC6
-UC6 --> UC7
-UC6 --> UC12
-Notification --> UC12
-```
+%% Auditor Actions
+Auditor --> ViewReports
+Auditor --> ViewAuditLogs
