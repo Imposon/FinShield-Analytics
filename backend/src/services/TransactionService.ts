@@ -8,24 +8,25 @@ export class TransactionService {
     private auditLogger = AuditLogger.getInstance();
 
     constructor(
-        private readonly repository: TransactionRepository,
+        public readonly repository: TransactionRepository,
         private readonly fraudService: FraudService,
         private readonly alertService: AlertService
     ) {}
 
-    public processTransaction(txData: any): Transaction {
+    public async processTransaction(txData: any, accountId: string = 'anonymous'): Promise<Transaction> {
         const id = 'TXN-' + Math.random().toString(36).substring(2, 10).toUpperCase();
         
         const newTx: Transaction = {
             ...txData,
             id,
+            accountId: txData.accountId || accountId,
             timestamp: txData.timestamp ? new Date(txData.timestamp) : new Date(),
             status: TransactionStatus.SAFE,
             riskScore: 0,
-            currency: txData.currency || 'USD'
+            currency: txData.currency || 'INR'
         };
 
-        newTx.riskScore = this.fraudService.analyzeTransaction(newTx);
+        newTx.riskScore = await this.fraudService.analyzeTransaction(newTx);
         
         if (newTx.riskScore >= 75) {
             newTx.status = TransactionStatus.FRAUDULENT;
@@ -33,17 +34,17 @@ export class TransactionService {
             newTx.status = TransactionStatus.SUSPICIOUS;
         }
 
-        this.repository.save(newTx);
+        await this.repository.save(newTx);
         this.auditLogger.logTransaction(id, 'PROCESSED', `Status: ${newTx.status}`);
 
         if (newTx.status !== TransactionStatus.SAFE) {
-            this.alertService.createAlert(newTx.id);
+            await this.alertService.createAlert(newTx.id);
         }
 
         return newTx;
     }
 
-    public getAllTransactions(): Transaction[] {
-        return this.repository.findAll();
+    public async getTransactionsByAccount(accountId: string): Promise<Transaction[]> {
+        return await this.repository.findByAccount(accountId);
     }
 }

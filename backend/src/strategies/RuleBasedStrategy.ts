@@ -1,20 +1,20 @@
-import { FraudScoringStrategy } from './FraudScoringStrategy';
+import { RiskStrategy } from './RiskStrategy';
 import { Transaction } from '../models/Transaction';
 import { TransactionRepository } from '../repositories/TransactionRepository';
 
-export class RuleBasedStrategy implements FraudScoringStrategy {
+export class RuleBasedStrategy implements RiskStrategy {
     constructor(private readonly repository: TransactionRepository) {}
 
-    calculateRiskScore(transaction: Transaction): number {
-        const history = this.repository.findAll().filter(t => t.accountId === transaction.accountId);
+    async calculateRisk(transaction: Transaction): Promise<number> {
+        const history = await this.repository.findByAccount(transaction.accountId);
         let score = 0;
 
         if (history.length > 0) {
-            const amounts = history.map(t => t.amount);
-            const avg = amounts.reduce((a, b) => a + b, 0) / amounts.length;
+            const amounts = history.map((t: any) => t.amount);
+            const avg = amounts.reduce((a: number, b: number) => a + b, 0) / amounts.length;
             if (transaction.amount > avg * 3) score += 40;
             
-            const merchants = new Set(history.map(t => t.merchant));
+            const merchants = new Set(history.map((t: any) => t.merchant));
             if (!merchants.has(transaction.merchant)) score += 30;
         } else {
             if (transaction.amount > 5000) score += 50;

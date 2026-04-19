@@ -28,3 +28,9 @@ th, td { padding: 20px 24px; text-align: left; border-bottom: 1px solid var(--ca
 .status.safe { background: #0E1F14; color: #32E278; }
 .status.suspicious { background: #2C220B; color: #FFB300; }
 .status.fraudulent { background: #2C0F0F; color: #FF4A4A; }
+.file-upload-wrapper { border: 2px dashed var(--card-border); border-radius: 20px; display: flex; flex-direction: column; align-items: center; cursor: pointer; position: relative; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.file-upload-wrapper:hover { border-color: var(--accent); background: rgba(226, 255, 50, 0.05); }
+.file-upload-wrapper input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+.fade-in { animation: fadeIn 0.4s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

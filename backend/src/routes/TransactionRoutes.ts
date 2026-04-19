@@ -11,6 +11,7 @@ export class TransactionRoutes {
         this.router.post('/upload', upload.single('file'), this.controller.uploadDocument);
         this.router.post('/transactions', this.controller.createTransaction);
         this.router.get('/transactions', this.controller.getAllTransactions);
+        this.router.get('/ai-insights', this.controller.getAIInsights);
         this.router.delete('/transactions', this.controller.clearTransactions);
     }
 }
