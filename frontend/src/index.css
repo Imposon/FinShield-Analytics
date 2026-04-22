@@ -26,6 +26,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-timeline: --scroll-timeline y;
 }
 
 body {
@@ -33,6 +34,29 @@ body {
   background: var(--bg-main);
   color: var(--text-primary);
   line-height: 1.6;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+  border-radius: 5px;
+  border: 2px solid var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--primary-light), var(--primary));
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--bg-main);
 }
 
 .scroll-layout {
@@ -129,6 +153,26 @@ body {
 
 .scroll-content {
   padding-top: 64px;
+  scroll-snap-type: y proximity;
+  overflow-y: auto;
+  height: calc(100vh - 64px);
+}
+
+.scroll-progress {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: rgba(16, 185, 129, 0.1);
+  z-index: 999;
+}
+
+.scroll-progress-bar {
+  width: 100%;
+  background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+  border-radius: 2px;
+  transition: height 0.1s;
 }
 
 .section {
@@ -137,6 +181,12 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  scroll-snap-align: start;
+  scroll-snap-stop: normal;
+}
+
+.section:last-of-type {
+  scroll-snap-align: end;
 }
 
 .section-header {
@@ -181,21 +231,31 @@ body {
 }
 
 .flash-card {
-  background: var(--bg-card);
-  border: 2px solid var(--border);
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   padding: 48px;
   text-align: center;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   min-height: 320px;
   display: flex;
   flex-direction: column;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -1px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .flash-card:hover {
-  border-color: var(--primary);
-  box-shadow: 0 0 40px rgba(16, 185, 129, 0.2);
-  transform: translateY(-4px);
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 
+    0 20px 40px -5px rgba(16, 185, 129, 0.3),
+    0 10px 20px -5px rgba(16, 185, 129, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-12px) scale(1.02);
+  background: rgba(30, 41, 59, 0.8);
 }
 
 .flash-card-front {
@@ -218,13 +278,24 @@ body {
 .flash-icon {
   width: 100px;
   height: 100px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05));
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(16, 185, 129, 0.1));
   border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--primary);
   margin-bottom: 24px;
+  box-shadow: 
+    0 8px 32px rgba(16, 185, 129, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.flash-card:hover .flash-icon {
+  transform: scale(1.1);
+  box-shadow: 
+    0 12px 40px rgba(16, 185, 129, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 .flash-card h3 {
@@ -240,19 +311,22 @@ body {
 }
 
 .upload-zone-lg {
-  border: 2px dashed var(--border);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
   border-radius: 16px;
   padding: 40px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
   position: relative;
   width: 100%;
+  background: rgba(15, 23, 42, 0.3);
 }
 
 .upload-zone-lg:hover {
   border-color: var(--primary);
-  background: rgba(16, 185, 129, 0.05);
+  background: rgba(16, 185, 129, 0.1);
+  transform: scale(1.02);
+  box-shadow: 0 0 30px rgba(16, 185, 129, 0.2);
 }
 
 .upload-zone-lg input {
@@ -274,6 +348,9 @@ body {
   justify-content: center;
   gap: 24px;
   color: var(--primary);
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .analysis-ready h3 {
@@ -290,13 +367,18 @@ body {
 }
 
 .data-table-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   padding: 32px;
   max-width: 1200px;
   width: 100%;
   overflow: hidden;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .table-header-actions {
@@ -373,6 +455,9 @@ tr:hover td {
   width: 100%;
   min-height: 400px;
   justify-content: center;
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .insight-loading {
@@ -437,19 +522,27 @@ tr:hover td {
 }
 
 .flash-metric {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   padding: 32px;
   display: flex;
   align-items: center;
   gap: 20px;
-  transition: all 0.2s;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .flash-metric:hover {
-  border-color: var(--primary);
-  transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.5);
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 
+    0 16px 32px rgba(16, 185, 129, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .metric-icon-bg {
@@ -496,6 +589,21 @@ tr:hover td {
 
 .chart-card {
   padding: 32px;
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.chart-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 20px 40px rgba(16, 185, 129, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .chart-card h4 {
@@ -641,12 +749,17 @@ tr:hover td {
 }
 
 .login-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(30, 41, 59, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
   padding: 48px;
   width: 100%;
   max-width: 420px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .login-header {

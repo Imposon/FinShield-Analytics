@@ -97,8 +97,9 @@ function App() {
   const [user, setUser] = useState<UserData | null>(null);
   const [aiText, setAiText] = useState('');
   const [loadingAi, setLoadingAi] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
+  const scrollContentRef = useRef<HTMLDivElement>(null);
   const uploadRef = useRef<HTMLDivElement>(null);
   const analysisRef = useRef<HTMLDivElement>(null);
   const flaggedRef = useRef<HTMLDivElement>(null);
@@ -115,11 +116,18 @@ function App() {
   });
 
   useEffect(() => {
+    const scrollContent = scrollContentRef.current;
+    if (!scrollContent) return;
+
     const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 300);
+      const scrollTop = scrollContent.scrollTop;
+      const scrollHeight = scrollContent.scrollHeight - scrollContent.clientHeight;
+      const progress = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+      setScrollProgress(progress);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    scrollContent.addEventListener('scroll', handleScroll);
+    return () => scrollContent.removeEventListener('scroll', handleScroll);
   }, []);
 
   const fetchTransactions = async () => {
@@ -245,7 +253,15 @@ function App() {
   };
 
   const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
-    ref.current?.scrollIntoView({ behavior: 'smooth' });
+    const scrollContent = scrollContentRef.current;
+    const target = ref.current;
+    if (!scrollContent || !target) return;
+    
+    const targetPosition = target.offsetTop - 64;
+    scrollContent.scrollTo({
+      top: targetPosition,
+      behavior: 'smooth'
+    });
   };
 
   const getRiskLevel = (score: number) => {
@@ -276,6 +292,10 @@ function App() {
 
   return (
     <div className="scroll-layout">
+      <div className="scroll-progress">
+        <div className="scroll-progress-bar" style={{ height: `${scrollProgress}%` }} />
+      </div>
+      
       <nav className="top-nav">
         <div className="nav-brand">
           <div className="brand-icon-sm">F</div>
@@ -296,7 +316,7 @@ function App() {
         </div>
       </nav>
 
-      <main className="scroll-content">
+      <main ref={scrollContentRef} className="scroll-content">
         <section ref={uploadRef} className="section upload-section">
           <div className="section-header">
             <h1 className="section-title">Upload Transaction Data</h1>
@@ -524,7 +544,7 @@ function App() {
 
         <footer className="scroll-footer">
           <p>FinShield Analytics | Session: {user!.id}</p>
-          <button className="scroll-top-btn" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <button className="scroll-top-btn" onClick={() => scrollContentRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}>
             Back to Top
           </button>
         </footer>
