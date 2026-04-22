@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Activity, UploadCloud, AlertTriangle, List, BrainCircuit, LogOut, FileText, CheckCircle, Lock, User, Zap, Shield, TrendingUp, Clock, FileSearch, XCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { BarChart, Bar, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { LogOut, FileText, CheckCircle, Lock, User, Zap, Shield, TrendingUp, Clock, FileSearch, XCircle, Upload, AlertTriangle, BrainCircuit, ChevronDown } from 'lucide-react';
 
 interface UserData {
   name: string;
@@ -90,7 +90,6 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserData) => void }) => {
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState('Dashboard');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [fileError, setFileError] = useState('');
@@ -98,6 +97,13 @@ function App() {
   const [user, setUser] = useState<UserData | null>(null);
   const [aiText, setAiText] = useState('');
   const [loadingAi, setLoadingAi] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const uploadRef = useRef<HTMLDivElement>(null);
+  const analysisRef = useRef<HTMLDivElement>(null);
+  const flaggedRef = useRef<HTMLDivElement>(null);
+  const insightsRef = useRef<HTMLDivElement>(null);
+  const dashboardRef = useRef<HTMLDivElement>(null);
 
   const backendUrl = window.location.hostname === 'localhost' 
     ? 'http://localhost:5002/api' 
@@ -107,6 +113,14 @@ function App() {
     'Content-Type': 'application/json',
     'x-account-id': user?.id || 'anonymous'
   });
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const fetchTransactions = async () => {
     try {
@@ -151,7 +165,6 @@ function App() {
       if (data.success) {
         setAnalysisRan(false);
         await fetchTransactions();
-        setActiveTab('Run Analysis');
       } else {
         setFileError('Upload failed: ' + data.message);
       }
@@ -216,7 +229,6 @@ function App() {
       });
       setAnalysisRan(false);
       await fetchTransactions();
-      setActiveTab('Run Analysis');
     } catch (err) {
       console.error(err);
     } finally {
@@ -230,6 +242,10 @@ function App() {
     setAnalysisRan(false);
     await fetchTransactions();
     setLoading(false);
+  };
+
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const getRiskLevel = (score: number) => {
@@ -254,347 +270,264 @@ function App() {
     { name: 'Fraudulent', value: stats.fraudulent, color: '#ef4444' }
   ].filter(d => d.value > 0);
 
-  const navItems = [
-    { id: 'Dashboard', label: 'Dashboard', icon: Activity },
-    { id: 'Upload', label: 'Upload Data', icon: UploadCloud },
-    { id: 'Analysis', label: 'Run Analysis', icon: FileSearch },
-    { id: 'Flagged', label: 'Flagged Items', icon: AlertTriangle },
-    { id: 'Insights', label: 'AI Insights', icon: BrainCircuit }
-  ];
-
   if (!isAuthenticated) {
     return <LoginPage onLogin={(u) => { setUser(u); setIsAuthenticated(true); }} />;
   }
 
   return (
-    <div className="app-container">
-      <aside className="sidebar slide-in">
-        <div className="brand-header">
-          <div className="brand-icon">F</div>
-          <h1 className="brand-title">FinShield</h1>
+    <div className="scroll-layout">
+      <nav className="top-nav">
+        <div className="nav-brand">
+          <div className="brand-icon-sm">F</div>
+          <span className="brand-text">FinShield</span>
         </div>
-        <nav className="nav-section">
-          <div className="nav-label">Main Menu</div>
-          <ul className="nav-menu">
-            {navItems.map(item => (
-              <li
-                key={item.id}
-                className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(item.id)}
-              >
-                <item.icon size={18} />
-                {item.label}
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div className="user-footer">
-          <div className="user-card">
-            <div className="user-avatar">{user!.init}</div>
-            <div className="user-info">
-              <div className="user-name">{user!.name}</div>
-              <div className="user-role">Risk Analyst</div>
-            </div>
-            <div className="logout-btn" onClick={() => window.location.reload()}>
-              <LogOut size={18} />
-            </div>
-          </div>
+        <div className="nav-links">
+          <button onClick={() => scrollToSection(uploadRef)}>Upload</button>
+          <button onClick={() => scrollToSection(analysisRef)}>Analysis</button>
+          <button onClick={() => scrollToSection(flaggedRef)}>Flagged</button>
+          <button onClick={() => scrollToSection(insightsRef)}>Insights</button>
+          <button onClick={() => scrollToSection(dashboardRef)}>Dashboard</button>
         </div>
-      </aside>
+        <div className="nav-user">
+          <span>{user!.name}</span>
+          <button className="logout-icon" onClick={() => window.location.reload()}>
+            <LogOut size={18} />
+          </button>
+        </div>
+      </nav>
 
-      <main className="main-content">
-        {activeTab === 'Dashboard' && (
-          <div className="fade-in">
-            <div className="page-header">
-              <h1 className="page-title">Dashboard Overview</h1>
-              <p className="page-subtitle">Real-time fraud detection analytics for session {user!.id}</p>
-            </div>
-
-            <div className="metrics-grid">
-              <div className="metric-card">
-                <div className="metric-header">
-                  <span className="metric-label">Total Transactions</span>
-                  <div className="metric-icon primary"><Activity size={20} /></div>
-                </div>
-                <div className="metric-value">{stats.total}</div>
-                <div className="metric-change">Processed this session</div>
-              </div>
-              <div className="metric-card">
-                <div className="metric-header">
-                  <span className="metric-label">Anomalies Detected</span>
-                  <div className="metric-icon warning"><AlertTriangle size={20} /></div>
-                </div>
-                <div className={`metric-value ${stats.anomalies > 0 ? 'danger' : ''}`}>{stats.anomalies}</div>
-                <div className="metric-change">Require investigation</div>
-              </div>
-              <div className="metric-card">
-                <div className="metric-header">
-                  <span className="metric-label">Total Volume</span>
-                  <div className="metric-icon info"><TrendingUp size={20} /></div>
-                </div>
-                <div className="metric-value">₹{(stats.totalSpend / 100000).toFixed(2)}L</div>
-                <div className="metric-change">Gross transaction value</div>
-              </div>
-              <div className="metric-card">
-                <div className="metric-header">
-                  <span className="metric-label">Avg Risk Score</span>
-                  <div className="metric-icon danger"><Shield size={20} /></div>
-                </div>
-                <div className={`metric-value ${stats.avgRisk > 50 ? 'warning' : ''}`}>{stats.avgRisk.toFixed(1)}%</div>
-                <div className="metric-change">Across all transactions</div>
-              </div>
-            </div>
-
-            <div className="content-grid">
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="card-title">Transaction Volume</h3>
-                </div>
-                <div className="card-body">
-                  {transactions.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart data={transactions.slice(0, 15)}>
-                        <Tooltip
-                          cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                          contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }}
-                        />
-                        <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="empty-state">
-                      <div className="empty-state-icon"><TrendingUp size={32} /></div>
-                      <p className="empty-state-text">No transaction data available</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="card-title">Risk Distribution</h3>
-                </div>
-                <div className="card-body">
-                  {pieData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={80}
-                          paddingAngle={5}
-                          dataKey="value"
-                        >
-                          {pieData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="empty-state">
-                      <div className="empty-state-icon"><Shield size={32} /></div>
-                      <p className="empty-state-text">No risk data to display</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+      <main className="scroll-content">
+        <section ref={uploadRef} className="section upload-section">
+          <div className="section-header">
+            <h1 className="section-title">Upload Transaction Data</h1>
+            <p className="section-subtitle">Import your data to begin fraud detection analysis</p>
+            <ChevronDown className="scroll-hint" size={32} />
           </div>
-        )}
-
-        {activeTab === 'Upload' && (
-          <div className="fade-in">
-            <div className="page-header">
-              <h1 className="page-title">Data Upload</h1>
-              <p className="page-subtitle">Import transaction data via file upload or simulation</p>
-            </div>
-
-            <div className="content-grid">
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="card-title">Simulate Data</h3>
-                </div>
-                <div className="card-body">
-                  <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-                    Generate sample transaction data for testing. This will create 40 realistic transactions with varying risk profiles.
-                  </p>
-                  <button className="btn btn-primary" onClick={injectSampleData} disabled={loading}>
-                    {loading ? (
-                      <span className="loading-spinner"><span className="spinner"></span>Generating...</span>
-                    ) : (<><Zap size={18} /> Generate Sample Data</>)}
-                  </button>
-                </div>
+          <div className="flash-cards">
+            <div className="flash-card upload-card">
+              <div className="flash-card-front">
+                <div className="flash-icon"><Upload size={48} /></div>
+                <h3>File Upload</h3>
+                <p>Upload CSV or PDF bank statements</p>
               </div>
-
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="card-title">File Upload</h3>
+              <div className="flash-card-back">
+                <div className="upload-zone-lg">
+                  <FileText size={40} />
+                  <p>Drop files here or click to browse</p>
+                  <input type="file" accept=".csv,.pdf" onChange={handleFileUpload} disabled={loading} />
                 </div>
-                <div className="card-body">
-                  <div className="upload-zone">
-                    <div className="upload-icon"><FileText size={32} /></div>
-                    <p className="upload-text">{loading ? 'Processing...' : 'Click to upload or drag files here'}</p>
-                    <p className="upload-hint">Supports CSV and PDF formats</p>
-                    <input type="file" accept=".csv,.pdf" onChange={handleFileUpload} disabled={loading} />
-                  </div>
-                  {fileError && <p className="error-message">{fileError}</p>}
-                </div>
+                {fileError && <p className="error-message">{fileError}</p>}
               </div>
             </div>
-          </div>
-        )}
-
-        {activeTab === 'Analysis' && (
-          <div className="fade-in">
-            <div className="page-header">
-              <h1 className="page-title">Transaction Analysis</h1>
-              <p className="page-subtitle">Review AI-powered risk assessment results</p>
-            </div>
-
-            {!analysisRan ? (
-              <div className="card" style={{ textAlign: 'center', padding: '64px 24px' }}>
-                <div className="empty-state-icon"><BrainCircuit size={40} /></div>
-                <h3 className="empty-state-title">Ready to Analyze</h3>
-                <p className="empty-state-text" style={{ marginBottom: '32px' }}>
-                  {transactions.length} transactions loaded for session {user!.id}. Run the hybrid AI + rule-based analysis engine.
-                </p>
-                <button
-                  className="btn btn-primary"
-                  onClick={() => { setLoading(true); setTimeout(() => { setAnalysisRan(true); setLoading(false); }, 1500); }}
-                  disabled={loading || transactions.length === 0}
-                >
-                  {loading ? (
-                    <span className="loading-spinner"><span className="spinner"></span>Running Analysis...</span>
-                  ) : (<><FileSearch size={18} /> Run Analysis</>)}
+            <div className="flash-card simulate-card">
+              <div className="flash-card-front">
+                <div className="flash-icon"><Zap size={48} /></div>
+                <h3>Simulate Data</h3>
+                <p>Generate 40 sample transactions</p>
+              </div>
+              <div className="flash-card-back">
+                <p className="simulate-text">Create realistic test data with mixed risk profiles for demonstration purposes.</p>
+                <button className="btn btn-primary" onClick={injectSampleData} disabled={loading}>
+                  {loading ? 'Generating...' : 'Generate Sample Data'}
                 </button>
               </div>
-            ) : (
-              <div className="card">
-                <div className="table-container">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Transaction ID</th>
-                        <th>Merchant</th>
-                        <th>Amount</th>
-                        <th>Risk Score</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {transactions.sort((a, b) => b.riskScore - a.riskScore).map(tx => (
-                        <tr key={tx.id}>
-                          <td style={{ fontFamily: 'monospace', color: 'var(--text-muted)' }}>{tx.id}</td>
-                          <td>{tx.merchant}</td>
-                          <td>₹{tx.amount.toLocaleString()}</td>
-                          <td>
-                            <span className={`risk-score ${getRiskLevel(tx.riskScore)}`}>{tx.riskScore}%</span>
-                          </td>
-                          <td><span className={`status-badge ${tx.status.toLowerCase()}`}>{tx.status}</span></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                {transactions.length === 0 && (
-                  <div className="empty-state">
-                    <div className="empty-state-icon"><XCircle size={32} /></div>
-                    <p className="empty-state-text">No transactions to analyze</p>
-                  </div>
-                )}
+            </div>
+          </div>
+        </section>
+
+        <section ref={analysisRef} className="section">
+          <div className="section-header">
+            <h2 className="section-title">Transaction Analysis</h2>
+            <p className="section-subtitle">AI-powered risk assessment results</p>
+          </div>
+          {!analysisRan ? (
+            <div className="flash-card analysis-ready">
+              <FileSearch size={64} />
+              <h3>Ready to Analyze</h3>
+              <p>{transactions.length} transactions loaded. Run the hybrid AI + rule-based engine.</p>
+              <button
+                className="btn btn-primary btn-lg"
+                onClick={() => { setLoading(true); setTimeout(() => { setAnalysisRan(true); setLoading(false); }, 1500); }}
+                disabled={loading || transactions.length === 0}
+              >
+                {loading ? 'Running Analysis...' : 'Run Analysis'}
+              </button>
+            </div>
+          ) : (
+            <div className="data-table-card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Transaction ID</th>
+                    <th>Merchant</th>
+                    <th>Amount</th>
+                    <th>Risk Score</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.sort((a, b) => b.riskScore - a.riskScore).map(tx => (
+                    <tr key={tx.id}>
+                      <td className="mono">{tx.id}</td>
+                      <td>{tx.merchant}</td>
+                      <td>₹{tx.amount.toLocaleString()}</td>
+                      <td><span className={`risk-score ${getRiskLevel(tx.riskScore)}`}>{tx.riskScore}%</span></td>
+                      <td><span className={`status-badge ${tx.status.toLowerCase()}`}>{tx.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
+        <section ref={flaggedRef} className="section">
+          <div className="section-header">
+            <h2 className="section-title">Flagged Transactions</h2>
+            <p className="section-subtitle">High-risk items requiring manual review</p>
+          </div>
+          <div className="data-table-card">
+            <div className="table-header-actions">
+              <span className="flagged-count">{transactions.filter(t => t.riskScore >= 45).length} items flagged</span>
+              <button className="btn btn-danger" onClick={clearHistory}>
+                <XCircle size={16} /> Clear All
+              </button>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Transaction ID</th>
+                  <th>Merchant</th>
+                  <th>Amount</th>
+                  <th>Risk Score</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.filter(t => t.riskScore >= 45).sort((a, b) => b.riskScore - a.riskScore).map(tx => (
+                  <tr key={tx.id} className="flagged-row">
+                    <td className="mono">{tx.id}</td>
+                    <td className="fw-bold">{tx.merchant}</td>
+                    <td className="fw-bold">₹{tx.amount.toLocaleString()}</td>
+                    <td><span className="risk-score high">{tx.riskScore}%</span></td>
+                    <td><span className={`status-badge ${tx.status.toLowerCase()}`}>{tx.status}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {transactions.filter(t => t.riskScore >= 45).length === 0 && (
+              <div className="all-clear">
+                <CheckCircle size={64} color="#22c55e" />
+                <h3>All Clear</h3>
+                <p>No flagged transactions found.</p>
               </div>
             )}
           </div>
-        )}
+        </section>
 
-        {activeTab === 'Flagged' && (
-          <div className="fade-in">
-            <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <h1 className="page-title">Flagged Transactions</h1>
-                <p className="page-subtitle">High-risk items requiring manual review</p>
+        <section ref={insightsRef} className="section">
+          <div className="section-header">
+            <h2 className="section-title">AI Insights</h2>
+            <p className="section-subtitle">Cognitive analysis powered by Groq LLM</p>
+          </div>
+          <div className="flash-card insight-card">
+            {loadingAi ? (
+              <div className="insight-loading">
+                <span className="spinner-lg"></span>
+                <p>Analyzing patterns...</p>
               </div>
-              <button className="btn btn-danger" onClick={clearHistory}>
-                <XCircle size={18} /> Clear All
-              </button>
-            </div>
-
-            <div className="card">
-              <div className="table-container">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Transaction ID</th>
-                      <th>Merchant</th>
-                      <th>Amount</th>
-                      <th>Risk Score</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transactions.filter(t => t.riskScore >= 45).sort((a, b) => b.riskScore - a.riskScore).map(tx => (
-                      <tr key={tx.id}>
-                        <td style={{ fontFamily: 'monospace', color: 'var(--text-muted)' }}>{tx.id}</td>
-                        <td style={{ fontWeight: 600 }}>{tx.merchant}</td>
-                        <td style={{ fontWeight: 600 }}>₹{tx.amount.toLocaleString()}</td>
-                        <td><span className="risk-score high">{tx.riskScore}%</span></td>
-                        <td><span className={`status-badge ${tx.status.toLowerCase()}`}>{tx.status}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {transactions.filter(t => t.riskScore >= 45).length === 0 && (
-                <div className="empty-state">
-                  <div className="empty-state-icon" style={{ background: 'rgba(34, 197, 94, 0.15)', color: '#22c55e' }}>
-                    <CheckCircle size={32} />
-                  </div>
-                  <h3 className="empty-state-title">All Clear</h3>
-                  <p className="empty-state-text">No flagged transactions found for this session.</p>
+            ) : aiText ? (
+              <div className="insight-content">
+                <div className="insight-header">
+                  <BrainCircuit size={32} />
+                  <h3>Strategic Analysis Summary</h3>
                 </div>
+                <div className="insight-body">{aiText}</div>
+              </div>
+            ) : (
+              <div className="insight-empty">
+                <Clock size={64} />
+                <p>Run analysis first to generate AI-powered insights.</p>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section ref={dashboardRef} className="section dashboard-section">
+          <div className="section-header">
+            <h2 className="section-title">Dashboard Overview</h2>
+            <p className="section-subtitle">Real-time fraud detection analytics</p>
+          </div>
+          <div className="metrics-flash-grid">
+            <div className="flash-metric">
+              <div className="metric-icon-bg primary"><TrendingUp size={28} /></div>
+              <div className="metric-data">
+                <span className="metric-value">{stats.total}</span>
+                <span className="metric-label">Total Transactions</span>
+              </div>
+            </div>
+            <div className="flash-metric">
+              <div className="metric-icon-bg warning"><AlertTriangle size={28} /></div>
+              <div className="metric-data">
+                <span className={`metric-value ${stats.anomalies > 0 ? 'danger' : ''}`}>{stats.anomalies}</span>
+                <span className="metric-label">Anomalies</span>
+              </div>
+            </div>
+            <div className="flash-metric">
+              <div className="metric-icon-bg info"><Shield size={28} /></div>
+              <div className="metric-data">
+                <span className="metric-value">₹{(stats.totalSpend / 100000).toFixed(2)}L</span>
+                <span className="metric-label">Total Volume</span>
+              </div>
+            </div>
+            <div className="flash-metric">
+              <div className="metric-icon-bg danger"><TrendingUp size={28} /></div>
+              <div className="metric-data">
+                <span className={`metric-value ${stats.avgRisk > 50 ? 'warning' : ''}`}>{stats.avgRisk.toFixed(1)}%</span>
+                <span className="metric-label">Avg Risk</span>
+              </div>
+            </div>
+          </div>
+          <div className="charts-grid">
+            <div className="flash-card chart-card">
+              <h4>Transaction Volume</h4>
+              {transactions.length > 0 ? (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={transactions.slice(0, 15)}>
+                    <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155' }} />
+                    <Bar dataKey="amount" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="no-data">No data available</p>
+              )}
+            </div>
+            <div className="flash-card chart-card">
+              <h4>Risk Distribution</h4>
+              {pieData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={5} dataKey="value">
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #334155' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="no-data">No data available</p>
               )}
             </div>
           </div>
-        )}
+        </section>
 
-        {activeTab === 'Insights' && (
-          <div className="fade-in">
-            <div className="page-header">
-              <h1 className="page-title">AI Insights</h1>
-              <p className="page-subtitle">Cognitive analysis powered by Groq LLM</p>
-            </div>
-
-            <div className="card">
-              <div className="card-body">
-                {loadingAi ? (
-                  <div className="empty-state">
-                    <div className="empty-state-icon"><span className="spinner" style={{ width: 32, height: 32 }}></span></div>
-                    <h3 className="empty-state-title">Analyzing Patterns</h3>
-                    <p className="empty-state-text">Processing transaction data with AI models...</p>
-                  </div>
-                ) : aiText ? (
-                  <div className="ai-insight-box">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                      <BrainCircuit size={24} color="#10b981" />
-                      <span style={{ fontWeight: 600, color: '#10b981' }}>Analysis Summary</span>
-                    </div>
-                    {aiText}
-                  </div>
-                ) : (
-                  <div className="empty-state">
-                    <div className="empty-state-icon"><Clock size={32} /></div>
-                    <h3 className="empty-state-title">No Analysis Yet</h3>
-                    <p className="empty-state-text">Run the analysis first to generate AI-powered insights.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        <footer className="scroll-footer">
+          <p>FinShield Analytics | Session: {user!.id}</p>
+          <button className="scroll-top-btn" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            Back to Top
+          </button>
+        </footer>
       </main>
     </div>
   );
