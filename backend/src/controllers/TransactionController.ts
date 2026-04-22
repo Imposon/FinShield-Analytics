@@ -2,10 +2,7 @@ import { Request, Response } from 'express';
 import { TransactionService } from '../services/TransactionService';
 import { AIInsightService } from '../services/AIInsightService';
 
-import { DocumentParserService } from '../services/DocumentParserService';
-
 export class TransactionController {
-    private parser = new DocumentParserService();
     constructor(
         private readonly service: TransactionService,
         private readonly aiService: AIInsightService

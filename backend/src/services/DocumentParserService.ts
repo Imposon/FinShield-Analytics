@@ -12,7 +12,6 @@ export class DocumentParserService {
     private parseText(text: string): any[] {
         const txs: any[] = [];
         
-        // 1. Try Tabular Regex (Date Narration Amount)
         const tabularRegex = /((?:\d{2}[-/\.]\d{2}[-/\.]\d{4})|(?:\d{4}[-/\.]\d{2}[-/\.]\d{2}))\s+(.+?)\s+((?:\d+(?:,\d{3})*(?:\.\d{2})?))$/gm;
         let match;
         while ((match = tabularRegex.exec(text)) !== null) {
@@ -23,18 +22,14 @@ export class DocumentParserService {
             });
         }
 
-        // 2. Try Labeled Pattern (Common in Paytm/GPay individual receipts or specific exports)
-        // Look for pairs of "Date:" and "Amount:" nearby
         if (txs.length === 0) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l);
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
-                // Look for Date
                 const dateMatch = line.match(/(?:Date|Time):\s*((?:\d{2}[-/\.](?:\d{2}|[A-Z]{3})[-/\.]\d{4}))/i);
                 if (dateMatch) {
                     let amount = 0;
                     let merchant = "Generic UPI Transfer";
-                    // Scan next 10 lines for Amount and Merchant
                     for (let j = 1; j < 10 && (i + j) < lines.length; j++) {
                         const nextLine = lines[i+j];
                         if (nextLine.match(/Amount|Paid|Received/i)) {
@@ -47,13 +42,12 @@ export class DocumentParserService {
                     }
                     if (amount > 0) {
                         txs.push({ timestamp: this.normalizeDate(dateMatch[1]), merchant, amount });
-                        i += 5; // skip ahead
+                        i += 5;
                     }
                 }
             }
         }
 
-        // 3. Last Resort: Just find anything that looks like a transaction
         if (txs.length === 0) {
             const genericRegex = /((?:\d{2}.\d{2}.\d{4}))\s+([A-Z\s]+)\s+([\d,]+\.\d{2})/g;
             while ((match = genericRegex.exec(text)) !== null) {
@@ -84,8 +78,7 @@ export class DocumentParserService {
                     amount: parseFloat(c[amtIdx] ? c[amtIdx].replace(/[^\d\.]/g, '') : '0')
                 };
             }
-            // Strict fallback for 5-column format: timestamp,merchant,amount,currency,accountId
-            return { timestamp: this.normalizeDate(c[0]), merchant: c[1], amount: parseFloat(c[2]) };
+                return { timestamp: this.normalizeDate(c[0]), merchant: c[1], amount: parseFloat(c[2]) };
         }).filter(tx => !isNaN(tx.amount) && tx.amount > 0);
 
         console.log(`[Parser] Extracted ${results.length} transactions from CSV.`);
@@ -99,7 +92,6 @@ export class DocumentParserService {
 
     private normalizeDate(dateStr: string): Date {
         if (!dateStr) return new Date();
-        // Handle 20-Apr-2024
         const months: any = { JAN:'01', FEB:'02', MAR:'03', APR:'04', MAY:'05', JUN:'06', JUL:'07', AUG:'08', SEP:'09', OCT:'10', NOV:'11', DEC:'12' };
         let cleanDate = dateStr.toUpperCase();
         for (const [m, v] of Object.entries(months)) {
@@ -113,7 +105,6 @@ export class DocumentParserService {
             const sep = cleanDate.includes('-') ? '-' : '/';
             const parts = cleanDate.split(sep);
             if (parts[0].length === 2 && parts[2].length === 4) {
-                 // DD-MM-YYYY -> YYYY-MM-DD
                  return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
             }
         }

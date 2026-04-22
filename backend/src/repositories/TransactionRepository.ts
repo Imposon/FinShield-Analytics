@@ -24,8 +24,6 @@ export class TransactionRepository {
 
     public async clearAccount(accountId: string): Promise<void> {
         await db('TRANSACTIONS').where('account_id', accountId).del();
-        // Since alerts are tied to transactions, we might want to cascade or just clear all
-        // For simple project, clear transactions for this user is enough
     }
 
     private mapRowToTransaction(row: any): Transaction {

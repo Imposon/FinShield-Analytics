@@ -8,13 +8,11 @@ export class AIBasedStrategy implements RiskStrategy {
 
     async calculateRisk(transaction: Transaction): Promise<number> {
         try {
-            // Real-time call to the Python FastAPI microservice
             const response = await fetch(`${this.aiServiceUrl}/score?amount=${transaction.amount}`);
             const data: any = await response.json();
             return Math.round(data.risk_score) || 50;
         } catch (error) {
             console.error("AI Service Error, falling back to heuristic hash:", error);
-            // Heuristic fallback if microservice is down
             let hash = 0;
             const seedString = `${transaction.accountId}-${transaction.merchant}`;
             for (let i = 0; i < seedString.length; i++) {

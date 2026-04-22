@@ -10,7 +10,6 @@ export const db = knex({
 });
 
 export const initDb = async () => {
-    // According to ErDiagram.md
     if (!await db.schema.hasTable('USERS')) {
         await db.schema.createTable('USERS', table => {
             table.increments('user_id').primary();
