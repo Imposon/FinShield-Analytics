@@ -12,6 +12,7 @@ import { NotificationService } from './services/NotificationService';
 import { AIInsightService } from './services/AIInsightService';
 import { TransactionController } from './controllers/TransactionController';
 import { TransactionRoutes } from './routes/TransactionRoutes';
+import { UserRoutes } from './routes/UserRoutes';
 import { Logger } from './utils/Logger';
 
 dotenv.config();
@@ -45,7 +46,10 @@ const startServer = async () => {
         const controller = new TransactionController(transactionService, aiInsightService);
         const routes = new TransactionRoutes(controller);
 
+        const userRoutes = new UserRoutes();
+
         app.use('/api', routes.router);
+        app.use('/api/users', userRoutes.router);
 
         app.get('/health', (req, res) => {
             res.json({ status: 'OK', service: 'FinShield' });

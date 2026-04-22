@@ -1,8 +1,4 @@
 
----
-
-# 📄 ErDiagram.md
-
 # ER Diagram – FinShield Analytics
 
 ```mermaid
@@ -11,23 +7,26 @@ erDiagram
 USERS {
     int user_id PK
     string name
-    string email
+    string email UK
     string password
     string role
     datetime created_at
 }
 
 TRANSACTIONS {
-    int transaction_id PK
+    string transaction_id PK
+    string account_id
     float amount
+    string currency
+    string merchant
     string status
     float risk_score
     datetime created_at
 }
 
 ALERTS {
-    int alert_id PK
-    int transaction_id FK
+    string alert_id PK
+    string transaction_id FK
     int assigned_to FK
     string status
     datetime created_at
@@ -40,15 +39,8 @@ AUDIT_LOGS {
     datetime timestamp
 }
 
-REPORTS {
-    int report_id PK
-    string report_type
-    datetime generated_at
-}
-
 USERS ||--o{ ALERTS : assigns
 TRANSACTIONS ||--|| ALERTS : generates
 USERS ||--o{ AUDIT_LOGS : performs
-TRANSACTIONS ||--o{ REPORTS : summarized_in
 
 ```

@@ -1,8 +1,3 @@
-
----
-
-# 📄 classDiagram.md
-
 # Class Diagram – FinShield Analytics
 
 ```mermaid
@@ -38,8 +33,11 @@ User <|-- RiskAnalyst
 User <|-- Auditor
 
 class Transaction {
-    +int transactionId
+    +string transactionId
+    +string accountId
     +float amount
+    +string currency
+    +string merchant
     +string status
     +float riskScore
     +validate()
@@ -62,13 +60,19 @@ class AIBasedStrategy {
     +calculateRisk()
 }
 
+class HybridStrategy {
+    +calculateRisk()
+}
+
 RiskStrategy <|-- RuleBasedStrategy
 RiskStrategy <|-- AIBasedStrategy
+RiskStrategy <|-- HybridStrategy
 
 FraudService --> RiskStrategy
 
 class Alert {
-    +int alertId
+    +string alertId
+    +string transactionId
     +string status
     +int assignedTo
     +assign()
@@ -82,7 +86,6 @@ class AlertService {
 }
 
 class NotificationService {
-    +sendEmail()
     +sendPushNotification()
 }
 
@@ -97,6 +100,35 @@ class ReportService {
     +generateRiskTrend()
 }
 
+class TransactionService {
+    +processTransaction()
+    +getTransactionsByAccount()
+}
+
+class TransactionRepository {
+    +save()
+    +findByAccount()
+    +clearAccount()
+}
+
+class AIInsightService {
+    +generateInsight()
+}
+
+class DocumentParserService {
+    +parseDocument()
+    +parseText()
+    +parseCsv()
+}
+
+class TransactionController {
+    +uploadDocument()
+    +createTransaction()
+    +getAllTransactions()
+    +getAIInsights()
+    +clearTransactions()
+}
+
 User "1" --> "many" Alert
 Transaction "1" --> "1" Alert
 AlertService --> Alert
@@ -104,4 +136,9 @@ AlertService --> NotificationService
 FraudService --> Transaction
 AuditLogger --> Transaction
 ReportService --> Transaction
+TransactionService --> TransactionRepository
+TransactionService --> FraudService
+TransactionService --> AlertService
+TransactionController --> TransactionService
+TransactionController --> AIInsightService
 ```

@@ -22,19 +22,50 @@ interface Transaction {
 const LoginPage = ({ onLogin }: { onLogin: (user: UserData) => void }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const backendUrl = window.location.hostname === 'localhost'
+    ? 'http://localhost:5002/api'
+    : 'https://finshield-analytics.onrender.com/api';
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      onLogin({
-        name: email.split('@')[0],
-        id: 'USR-' + Math.random().toString(36).substr(2, 6).toUpperCase(),
-        init: email[0].toUpperCase()
+    setError('');
+
+    try {
+      const endpoint = isRegistering ? '/users/register' : '/users/login';
+      const body = isRegistering
+        ? JSON.stringify({ name, email, password })
+        : JSON.stringify({ email, password });
+
+      const res = await fetch(`${backendUrl}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body
       });
+
+      const data = await res.json();
+
+      if (data.success) {
+        const user = {
+          name: data.data.name,
+          id: data.data.userId.toString(),
+          init: data.data.name[0].toUpperCase()
+        };
+        localStorage.setItem('finshield_user', JSON.stringify(user));
+        onLogin(user);
+      } else {
+        setError(data.message || 'Authentication failed');
+      }
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -42,10 +73,28 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserData) => void }) => {
       <div className="login-card fade-in">
         <div className="login-header">
           <div className="login-logo">F</div>
-          <h1 className="login-title">Welcome Back</h1>
-          <p className="login-subtitle">Sign in to access FinShield Analytics</p>
+          <h1 className="login-title">{isRegistering ? 'Create Account' : 'Welcome Back'}</h1>
+          <p className="login-subtitle">
+            {isRegistering ? 'Register to access FinShield Analytics' : 'Sign in to access FinShield Analytics'}
+          </p>
         </div>
         <form onSubmit={handleSubmit}>
+          {isRegistering && (
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
+              <div className="input-icon-wrapper">
+                <User className="input-icon" size={18} />
+                <input
+                  type="text"
+                  className="form-input with-icon"
+                  placeholder="John Doe"
+                  required
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
           <div className="form-group">
             <label className="form-label">Email Address</label>
             <div className="input-icon-wrapper">
@@ -74,15 +123,28 @@ const LoginPage = ({ onLogin }: { onLogin: (user: UserData) => void }) => {
               />
             </div>
           </div>
+          {error && <p className="error-message">{error}</p>}
           <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
             {loading ? (
               <span className="loading-spinner">
                 <span className="spinner"></span>
-                Signing in...
+                {isRegistering ? 'Creating Account...' : 'Signing in...'}
               </span>
-            ) : 'Sign In'}
+            ) : (isRegistering ? 'Create Account' : 'Sign In')}
           </button>
         </form>
+        <div className="auth-switch">
+          <p>
+            {isRegistering ? 'Already have an account?' : "Don't have an account?"}
+            <button
+              type="button"
+              className="auth-link"
+              onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
+            >
+              {isRegistering ? 'Sign In' : 'Create Account'}
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -100,6 +162,19 @@ function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
 
   const scrollContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('finshield_user');
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        setUser(parsed);
+        setIsAuthenticated(true);
+      } catch (e) {
+        localStorage.removeItem('finshield_user');
+      }
+    }
+  }, []);
   const uploadRef = useRef<HTMLDivElement>(null);
   const analysisRef = useRef<HTMLDivElement>(null);
   const flaggedRef = useRef<HTMLDivElement>(null);
@@ -140,9 +215,6 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    if (isAuthenticated) fetchTransactions();
-  }, [isAuthenticated]);
 
   useEffect(() => {
     if (analysisRan) {
@@ -310,7 +382,7 @@ function App() {
         </div>
         <div className="nav-user">
           <span>{user!.name}</span>
-          <button className="logout-icon" onClick={() => window.location.reload()}>
+          <button className="logout-icon" onClick={() => { localStorage.removeItem('finshield_user'); window.location.reload(); }}>
             <LogOut size={18} />
           </button>
         </div>
@@ -367,7 +439,15 @@ function App() {
               <p>{transactions.length} transactions loaded. Run the hybrid AI + rule-based engine.</p>
               <button
                 className="btn btn-primary btn-lg"
-                onClick={() => { setLoading(true); setTimeout(() => { setAnalysisRan(true); setLoading(false); }, 1500); }}
+                onClick={() => { 
+                  setLoading(true); 
+                  fetchTransactions().then(() => {
+                    setTimeout(() => { 
+                      setAnalysisRan(true); 
+                      setLoading(false); 
+                    }, 1500);
+                  });
+                }}
                 disabled={loading || transactions.length === 0}
               >
                 {loading ? 'Running Analysis...' : 'Run Analysis'}
@@ -406,43 +486,54 @@ function App() {
             <h2 className="section-title">Flagged Transactions</h2>
             <p className="section-subtitle">High-risk items requiring manual review</p>
           </div>
-          <div className="data-table-card">
-            <div className="table-header-actions">
-              <span className="flagged-count">{transactions.filter(t => t.riskScore >= 45).length} items flagged</span>
-              <button className="btn btn-danger" onClick={clearHistory}>
-                <XCircle size={16} /> Clear All
+          {!analysisRan ? (
+            <div className="flash-card analysis-ready">
+              <AlertTriangle size={64} />
+              <h3>Analysis Required</h3>
+              <p>Run the analysis first to view flagged transactions.</p>
+              <button className="btn btn-primary btn-lg" onClick={() => scrollToSection(analysisRef)}>
+                Go to Analysis
               </button>
             </div>
-            <table>
-              <thead>
-                <tr>
-                  <th>Transaction ID</th>
-                  <th>Merchant</th>
-                  <th>Amount</th>
-                  <th>Risk Score</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.filter(t => t.riskScore >= 45).sort((a, b) => b.riskScore - a.riskScore).map(tx => (
-                  <tr key={tx.id} className="flagged-row">
-                    <td className="mono">{tx.id}</td>
-                    <td className="fw-bold">{tx.merchant}</td>
-                    <td className="fw-bold">₹{tx.amount.toLocaleString()}</td>
-                    <td><span className="risk-score high">{tx.riskScore}%</span></td>
-                    <td><span className={`status-badge ${tx.status.toLowerCase()}`}>{tx.status}</span></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {transactions.filter(t => t.riskScore >= 45).length === 0 && (
-              <div className="all-clear">
-                <CheckCircle size={64} color="#22c55e" />
-                <h3>All Clear</h3>
-                <p>No flagged transactions found.</p>
+          ) : (
+            <div className="data-table-card">
+              <div className="table-header-actions">
+                <span className="flagged-count">{transactions.filter(t => t.riskScore >= 45).length} items flagged</span>
+                <button className="btn btn-danger" onClick={clearHistory}>
+                  <XCircle size={16} /> Clear All
+                </button>
               </div>
-            )}
-          </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Transaction ID</th>
+                    <th>Merchant</th>
+                    <th>Amount</th>
+                    <th>Risk Score</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.filter(t => t.riskScore >= 45).sort((a, b) => b.riskScore - a.riskScore).map(tx => (
+                    <tr key={tx.id} className="flagged-row">
+                      <td className="mono">{tx.id}</td>
+                      <td className="fw-bold">{tx.merchant}</td>
+                      <td className="fw-bold">₹{tx.amount.toLocaleString()}</td>
+                      <td><span className="risk-score high">{tx.riskScore}%</span></td>
+                      <td><span className={`status-badge ${tx.status.toLowerCase()}`}>{tx.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {transactions.filter(t => t.riskScore >= 45).length === 0 && (
+                <div className="all-clear">
+                  <CheckCircle size={64} color="#22c55e" />
+                  <h3>All Clear</h3>
+                  <p>No flagged transactions found.</p>
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
         <section ref={insightsRef} className="section">
@@ -478,7 +569,18 @@ function App() {
             <h2 className="section-title">Dashboard Overview</h2>
             <p className="section-subtitle">Real-time fraud detection analytics</p>
           </div>
-          <div className="metrics-flash-grid">
+          {!analysisRan ? (
+            <div className="flash-card analysis-ready">
+              <TrendingUp size={64} />
+              <h3>Dashboard Locked</h3>
+              <p>Complete the analysis to unlock dashboard insights.</p>
+              <button className="btn btn-primary btn-lg" onClick={() => scrollToSection(analysisRef)}>
+                Run Analysis
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="metrics-flash-grid">
             <div className="flash-metric">
               <div className="metric-icon-bg primary"><TrendingUp size={28} /></div>
               <div className="metric-data">
@@ -540,6 +642,8 @@ function App() {
               )}
             </div>
           </div>
+          </>
+        )}
         </section>
 
         <footer className="scroll-footer">
