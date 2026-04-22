@@ -93,8 +93,7 @@ export class UserController {
         } catch (e: any) {
             res.status(500).json({ success: false, message: e.message });
         }
-    };
+    }
 }
 
 export default UserController;
-</content>
