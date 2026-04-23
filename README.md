@@ -6,7 +6,7 @@ FinShield Analytics is a high-end, professional enterprise platform designed for
 ---
 
 ## 🚀 Live Demo
-**[Frontend Live Link (Vercel)](fin-shield-analytics-green.vercel.app/)**  
+**[Frontend Live Link (Vercel)](https://fin-shield-analytics-green.vercel.app/)**  
 **[Backend Live Link (Render)](https://finshield-analytics.onrender.com)**  
 
 ---
